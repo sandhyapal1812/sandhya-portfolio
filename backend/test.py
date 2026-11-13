@@ -1,17 +1,22 @@
 from database import get_connection
 
-print("Testing MySQL connection...")
+print("Testing Supabase connection...", flush=True)
 
 try:
     connection = get_connection()
-    print("MySQL Connected Successfully!")
+    print("Supabase Connected Successfully!")
 
     cursor = connection.cursor()
-    cursor.execute("SHOW TABLES")
+    cursor.execute("""
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+    """)
+
     print("Available Tables:", cursor.fetchall())
 
     cursor.close()
     connection.close()
 
 except Exception as e:
-    print("MySQL Connection Error:", e)
+    print("Database Connection Error:", e)

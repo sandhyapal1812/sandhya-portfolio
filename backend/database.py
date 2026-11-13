@@ -1,18 +1,17 @@
-import mysql.connector
 import os
+import psycopg
 from dotenv import load_dotenv
 
 load_dotenv()
 
 def get_connection():
-    print("Connecting to MySQL using TCP...", flush=True)
+    database_url = os.getenv("DATABASE_URL")
 
-    return mysql.connector.connect(
-        host="127.0.0.1",
-        port=3306,
-        user=os.getenv("DB_USER"),
-        password=os.getenv("DB_PASSWORD"),
-        database=os.getenv("DB_NAME"),
-        connection_timeout=5,
-        use_pure=True
+    if not database_url:
+        raise ValueError("DATABASE_URL is missing from .env")
+
+    return psycopg.connect(
+        database_url,
+        connect_timeout=10,
+        sslmode="require"
     )

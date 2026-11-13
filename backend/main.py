@@ -1,3 +1,4 @@
+
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, EmailStr, Field
@@ -9,8 +10,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],
     allow_credentials=False,
-    allow_methods=["POST"],
-    allow_headers=["Content-Type"],
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 class ContactMessage(BaseModel):
@@ -25,29 +26,25 @@ def home():
 
 @app.post("/api/contact")
 def submit_contact(data: ContactMessage):
-
     connection = None
-    cursor = None
 
     try:
         connection = get_connection()
-        cursor = connection.cursor()
 
-        query = """
-        INSERT INTO contact_messages
-        (name, email, subject, message)
-        VALUES (%s, %s, %s, %s)
-        """
-
-        cursor.execute(
-            query,
-            (
-                data.name.strip(),
-                str(data.email),
-                data.subject.strip(),
-                data.message.strip()
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                INSERT INTO public.contact_messages
+                (name, email, subject, message)
+                VALUES (%s, %s, %s, %s)
+                """,
+                (
+                    data.name.strip(),
+                    str(data.email),
+                    data.subject.strip(),
+                    data.message.strip()
+                )
             )
-        )
 
         connection.commit()
 
@@ -64,7 +61,5 @@ def submit_contact(data: ContactMessage):
         )
 
     finally:
-        if cursor:
-            cursor.close()
-        if connection and connection.is_connected():
+        if connection:
             connection.close()
